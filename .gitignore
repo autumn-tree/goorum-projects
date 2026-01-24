@@ -16,7 +16,7 @@ Thumbs.db
 .streamlit/
 
 # Temporary files
-inspect_data.py
+**/inspect_data.py
 
 # Local Excel data (optional, but keep it if it's the source of truth)
 # data/Global Superstore.xls
