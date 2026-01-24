@@ -10,7 +10,7 @@ st.set_page_config(page_title="Global Superstore Dashboard", layout="wide")
 # Constants
 BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, 'data', 'Global Superstore.xls')
-LOGO_PATH = os.path.join(BASE_DIR, 'assets', 'logo.png')
+LOGO_PATH = os.path.join(BASE_DIR, 'data', 'logo.png')
 
 # Load data
 @st.cache_data
