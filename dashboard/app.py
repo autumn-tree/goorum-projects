@@ -8,8 +8,9 @@ import os
 st.set_page_config(page_title="Global Superstore Dashboard", layout="wide")
 
 # Constants
-DATA_PATH = '/Users/park/Documents/Goorum/dashboard/data/Global Superstore.xls'
-LOGO_PATH = '/Users/park/.gemini/antigravity/brain/95095c99-b82f-4a65-a1d4-886982ea8f5e/superstore_logo_1769220570375.png'
+BASE_DIR = os.path.dirname(__file__)
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'Global Superstore.xls')
+LOGO_PATH = os.path.join(BASE_DIR, 'assets', 'logo.png')
 
 # Load data
 @st.cache_data
