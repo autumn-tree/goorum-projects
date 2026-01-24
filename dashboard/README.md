@@ -10,11 +10,29 @@ A modern, interactive retail analytics dashboard built with Python, Streamlit, a
     - **Regional Analysis**: Sales vs. Profit scatter plot with trendlines.
 - **Top-level Metrics**: Live summaries of Sales, Profit, and Quantity.
 
+## Local Setup
+
+### Prerequisites
+Ensure you have Python 3.8+ installed on your system.
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/autumn-tree/goorum-projects.git
+   cd goorum-projects/dashboard
+   ```
+
+2. Install the required dependencies:
+   ```bash
+   pip install xlrd openpyxl streamlit plotly pandas statsmodels
+   ```
+
 ## How to Run
 
 ### Option 1: Using the Script (Recommended)
-Run the convenience script from your terminal:
+Run the convenience script, which also verifies dependencies:
 ```bash
+chmod +x run.sh
 ./run.sh
 ```
 
