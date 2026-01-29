@@ -2,10 +2,8 @@ import pandas as pd
 from pathlib import Path
 
 def load_stock_data():
-    """
-    Load Kaggle stock CSV using base directory path.
-    CSV is expected at: data/data.csv
-    """
+    # Load Kaggle stock CSV using base directory path.
+    # CSV is expected at: data/data.csv
     base_dir = Path(__file__).resolve().parent
     csv_path = base_dir / "data" / "AMZN.csv"
 
