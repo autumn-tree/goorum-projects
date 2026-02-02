@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 
-# Load 
+# load 
 def load_data():
     base_dir = Path(__file__).resolve().parent
     data_path = base_dir / "data" / "netflix_titles.csv"
