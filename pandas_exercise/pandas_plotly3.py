@@ -12,7 +12,7 @@ def load_data():
     data_path = base_dir / "data" / "netflix_titles.csv"
     return pd.read_csv(data_path)
 
-
+# template 1
 def plot_top_countries(df):
     import plotly.io as pio
     pio.templates.default = "plotly_dark"
@@ -44,6 +44,7 @@ def plot_top_countries(df):
 
     fig.show()
 
+# legend 
 def plot_movie_tv_trend(df):
     import plotly.io as pio
     pio.templates.default = "presentation"
@@ -65,10 +66,23 @@ def plot_movie_tv_trend(df):
         title="Movie vs TV Show Trend Over Time"
     )
 
-    fig.update_layout(hovermode="x unified")
+    # legend layout
+    fig.update_layout(
+        legend=dict(
+            title="Content Type",
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=1
+        )
+    )
 
     fig.show()
 
+# template 2
 def plot_release_vs_duration(df):
     import plotly.io as pio
     pio.templates.default = "ggplot2"
