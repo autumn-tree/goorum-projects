@@ -15,7 +15,7 @@ def load_data():
     return df
 
 
-# 1️드롭다운 인터랙티브 그래프
+# 드롭다운 인터랙티브 그래프
 def dropdown_chart(df):
     movie_df = df[df["type"] == "Movie"].groupby("release_year").size()
     tv_df = df[df["type"] == "TV Show"].groupby("release_year").size()
