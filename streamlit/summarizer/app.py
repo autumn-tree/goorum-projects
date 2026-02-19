@@ -35,9 +35,38 @@ from src.thumbnail import (
 )
 
 
+@st.cache_data(show_spinner=False)
+def cache_data_probe(cache_version: int) -> str:
+    """Print when st.cache_data recomputes (cache miss or version change)."""
+    timestamp = datetime.now(UTC).isoformat()
+    print(f"[st.cache_data] recomputed | cache_version={cache_version} | at={timestamp}")
+    return timestamp
+
+
+@st.cache_resource(show_spinner=False)
+def cache_resource_probe(cache_version: int) -> dict[str, str]:
+    """Print when st.cache_resource initializes (first run or version change)."""
+    timestamp = datetime.now(UTC).isoformat()
+    print(f"[st.cache_resource] initialized | cache_version={cache_version} | at={timestamp}")
+    return {"initialized_at": timestamp}
+
+
+def print_cache_probe_status() -> None:
+    """Always print current cache probe state to terminal while app is running."""
+    cache_version = int(get_state(st.session_state, "cache_version", 1))
+    data_timestamp = cache_data_probe(cache_version)
+    resource_state = cache_resource_probe(cache_version)
+    print(
+        "[cache_probe] run | "
+        f"cache_version={cache_version} | "
+        f"cache_data_ts={data_timestamp} | "
+        f"cache_resource_ts={resource_state['initialized_at']}"
+    )
+
+
 def render_sidebar() -> None:
     """Render navigation and session controls."""
-    pages = ["Dashboard", "Thumbnail Extractor", "Debug"]
+    pages = ["Dashboard", "Thumbnail Extractor"]
     current_page = get_state(st.session_state, "page", "Dashboard")
     selected_page = st.sidebar.radio(
         "Navigate",
@@ -276,7 +305,10 @@ def render_thumbnail_page() -> None:
             "Thumbnail resolved: "
             f"{get_state(st.session_state, 'last_thumbnail_quality', 'unknown')}"
         )
-        st.image(thumbnail_url, caption=f"Video ID: {get_state(st.session_state, 'last_thumbnail_video_id', '')}")
+        st.image(
+            thumbnail_url,
+            caption=f"Video ID: {get_state(st.session_state, 'last_thumbnail_video_id', '')}",
+        )
 
         st.link_button("Open Thumbnail URL", thumbnail_url)
         try:
@@ -291,45 +323,12 @@ def render_thumbnail_page() -> None:
             st.warning("Thumbnail preview is available, but download fetch failed.")
 
 
-def render_debug_page() -> None:
-    st.header("Debug")
-    st.subheader("Cache Behavior")
-    show_cache_diag = st.toggle("Show cache diagnostics", value=False)
-    if show_cache_diag:
-        cache_info = {
-            "cache_version": get_state(st.session_state, "cache_version", 1),
-            "last_data_refresh_ts": get_state(st.session_state, "last_data_refresh_ts"),
-            "last_preprocess_refresh_ts": get_state(
-                st.session_state, "last_preprocess_refresh_ts"
-            ),
-            "last_data_cache_cleared_at": get_state(
-                st.session_state, "last_data_cache_cleared_at"
-            ),
-            "last_resource_cache_cleared_at": get_state(
-                st.session_state, "last_resource_cache_cleared_at"
-            ),
-        }
-        st.json(cache_info)
-        st.caption(
-            "Tip: cache refresh timestamps remain stable across reruns and change after cache clear."
-        )
-    else:
-        st.caption("Cache diagnostics are hidden. Enable the toggle to inspect details.")
-
-    st.subheader("Session State")
-    show_session_diag = st.toggle("Show session state diagnostics", value=False)
-    if show_session_diag:
-        st.write("Current session state")
-        st.json(dict(st.session_state))
-    else:
-        st.caption("Session state diagnostics are hidden. Enable the toggle to inspect details.")
-
-
 def main() -> None:
     st.set_page_config(page_title="KOSIS + Thumbnail App", layout="wide")
     st.title("Streamlit Multi-Feature App")
 
     init_session_state(st.session_state)
+    print_cache_probe_status()
     render_sidebar()
 
     page = get_state(st.session_state, "page", "Dashboard")
@@ -338,7 +337,8 @@ def main() -> None:
     elif page == "Thumbnail Extractor":
         render_thumbnail_page()
     else:
-        render_debug_page()
+        set_state(st.session_state, "page", "Dashboard")
+        render_dashboard_page()
 
 
 if __name__ == "__main__":
