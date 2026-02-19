@@ -74,8 +74,61 @@ def test_fetch_kosis_api_data_parses_data_payload(monkeypatch) -> None:  # type:
 
     monkeypatch.setattr(data_loader, "get_http_session", lambda: DummySession())
 
-    df = data_loader.fetch_kosis_api_data("https://example.com/kosis")
+    df = data_loader.fetch_kosis_api_data(
+        "https://example.com/kosis",
+        local_only=False,
+    )
 
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert df.iloc[0]["region"] == "Seoul"
+
+
+def test_validate_kosis_api_url_allows_loopback_in_local_only_mode() -> None:
+    is_valid, reason = data_loader.validate_kosis_api_url(
+        "http://127.0.0.1:8000/data",
+        local_only=True,
+    )
+    assert is_valid is True
+    assert reason is None
+
+
+def test_validate_kosis_api_url_blocks_external_host_in_local_only_mode() -> None:
+    is_valid, reason = data_loader.validate_kosis_api_url(
+        "https://example.com/kosis",
+        local_only=True,
+    )
+    assert is_valid is False
+    assert isinstance(reason, str) and "LOCAL_ONLY" in reason
+
+
+def test_validate_kosis_api_url_blocks_private_and_metadata_targets() -> None:
+    blocked_urls = [
+        "http://169.254.169.254/latest/meta-data/",
+        "http://10.0.0.8:8080/data",
+        "http://192.168.1.20/data",
+    ]
+    for blocked_url in blocked_urls:
+        is_valid, _ = data_loader.validate_kosis_api_url(blocked_url, local_only=False)
+        assert is_valid is False
+
+
+def test_load_kosis_data_uses_local_fallback_when_url_is_blocked(
+    tmp_path: Path,
+) -> None:
+    csv_path = tmp_path / "fallback_local_only.csv"
+    csv_path.write_text(
+        "date,region,category,value\n2024-03-01,Incheon,Employment,30\n",
+        encoding="utf-8",
+    )
+
+    df, source, refresh_ts = data_loader.load_kosis_data(
+        api_url="https://example.com/kosis",
+        local_path=csv_path,
+        local_only=True,
+    )
+
+    assert source == "local_fallback"
+    assert isinstance(refresh_ts, str) and refresh_ts
+    assert len(df) == 1
+    assert df.iloc[0]["region"] == "Incheon"

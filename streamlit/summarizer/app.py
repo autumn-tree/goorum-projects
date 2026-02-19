@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import requests
 import streamlit as st
 
 from src.charts import (
@@ -9,7 +10,7 @@ from src.charts import (
     build_region_heatmap,
     build_trend_line_chart,
 )
-from src.data_loader import load_kosis_data
+from src.data_loader import is_local_only_mode, load_kosis_data, validate_kosis_api_url
 from src.eda import (
     build_category_summary,
     build_grouped_stats,
@@ -128,16 +129,32 @@ def render_sidebar() -> None:
 def render_dashboard_page() -> None:
     st.header("KOSIS Dashboard")
     st.caption("Phase 3: EDA and Plotly visualization are enabled.")
+    local_only_mode = is_local_only_mode()
 
     api_url = st.text_input(
         "KOSIS API URL (Optional)",
         placeholder="https://example.com/kosis-endpoint",
-        help="If empty or failing, the app loads local sample data.",
+        help=(
+            "LOCAL_ONLY mode is enabled by default and allows only localhost/loopback URLs. "
+            "If empty or blocked, the app loads local sample data."
+        ),
     ).strip()
 
+    validated_api_url: str | None = None
+    if api_url:
+        is_valid, reason = validate_kosis_api_url(api_url, local_only=local_only_mode)
+        if is_valid:
+            validated_api_url = api_url
+        else:
+            st.warning(f"API URL blocked by safety policy: {reason}")
+
+    if local_only_mode:
+        st.caption("LOCAL_ONLY mode: external API fetch is blocked by default.")
+
     raw_df, source, data_refresh_ts = load_kosis_data(
-        api_url=api_url or None,
+        api_url=validated_api_url,
         local_path="data/raw/kosis_sample.csv",
+        local_only=local_only_mode,
     )
     processed_df = preprocess_kosis_data(raw_df)
     preprocess_refresh_ts = get_preprocess_refresh_timestamp(raw_df)
@@ -294,10 +311,6 @@ def render_thumbnail_page() -> None:
             clear_thumbnail_result_state()
             st.error(str(error))
             return
-        except Exception:
-            clear_thumbnail_result_state()
-            st.error("Unable to extract thumbnail due to a network or availability error.")
-            return
 
     thumbnail_url = get_state(st.session_state, "last_thumbnail_url")
     if thumbnail_url:
@@ -319,7 +332,7 @@ def render_thumbnail_page() -> None:
                 file_name=f"{get_state(st.session_state, 'last_thumbnail_video_id', 'thumbnail')}.jpg",
                 mime="image/jpeg",
             )
-        except Exception:
+        except requests.RequestException:
             st.warning("Thumbnail preview is available, but download fetch failed.")
 
 
